@@ -212,12 +212,11 @@ function BookingPage() {
   // Google Meet 링크 생성 함수 수정
   const createGoogleMeetEvent = async (reservationId) => {
     try {
-      const token = localStorage.getItem("accessToken");
       const response = await fetch("https://blaybus-glowup.com/api/google-calendar/create-event-with-meeting", {
         method: "POST",
+        credentials: 'include', // 쿠키 포함 설정
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           reservationId: reservationId,
@@ -257,13 +256,6 @@ function BookingPage() {
       return;
     }
 
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      navigate("/login");
-      return;
-    }
-
     try {
       // 1. 예약 생성
       const reservationData = {
@@ -288,9 +280,9 @@ function BookingPage() {
 
       const response = await fetch("https://blaybus-glowup.com/reservation/create", {
         method: "POST",
+        credentials: 'include', // 쿠키 포함 설정
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(reservationData)
       });
@@ -345,13 +337,26 @@ function BookingPage() {
     setShowPaymentModal(true);
   };
 
-  // 토큰 확인 로직 추가 필요
+  // 토큰 확인 로직 수정
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("https://blaybus-glowup.com/reservation/create", {
+          method: "GET",
+          credentials: 'include' // 쿠키 포함 설정
+        });
+        
+        if (!response.ok) {
+          navigate("/login");
+          return;
+        }
+      } catch (error) {
+        console.error("인증 확인 실패:", error);
+        navigate("/login");
+      }
+    };
+
+    checkAuth();
   }, []);
 
   if (!designer) return <div>로딩중...</div>;
